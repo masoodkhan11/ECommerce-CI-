@@ -1,0 +1,33 @@
+
+div#fixedheader {
+	width:100%;
+	color:#CCC;
+	background:#333;
+	padding:10px;
+
+}
+
+img#imgecomm {
+	width: 75px;
+	height: 70px;
+}
+
+img#imgcart{
+	width: 37px;
+	height: 33px;
+	padding-right: 20px;
+}
+
+.row {
+	width: 100%;
+}
+
+.box {
+	width: 30%;
+	float: left;
+}
+
+.box img {
+	height: 200px;
+	width: 200px;
+}
