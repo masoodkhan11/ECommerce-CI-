@@ -117,7 +117,7 @@ class Graph_api {
 	            array(
 	                "type"      => "postback",
 	                "title"     => "Remove",
-	                "payload"   =>  'cart/' .$value->id
+	                "payload"   =>  'remove/' .$value->id
 	            )
 	        );
 
@@ -151,13 +151,15 @@ class Graph_api {
 			'message' 	=> array(
 				'text' 			=> $text ,
 				'quick_replies' => array(
-					'content_type' 	=> 'text' ,
-					'title'			=> 'Proceed..' ,
-					'payload'		=> 'proceed'
+					array(
+						'content_type' 	=> 'text' ,
+						'title'			=> 'Proceed..' ,
+						'payload'		=> 'proceed'
+					)
 				)
 			)
 		);
-	    
+	    $this->api_call($data); 
 	}
 
 }

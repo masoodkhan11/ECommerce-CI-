@@ -11,6 +11,8 @@ class Webhook extends CI_Controller {
 
 		$this->load->model('BotUserModel');
 		$this->load->model('BotProductModel');
+		$this->load->model('BotCartModel');
+		$this->load->model('BotOrderModel');
 
 		$this->load->library('graph_api');
 		$this->load->library('wit_api');
@@ -110,17 +112,15 @@ class Webhook extends CI_Controller {
 		if( ! $user) {
 
 			$data = $this->graph_api->api_user($sender_id);
-
 			$insert_data = array(
 				'sender_id' => $sender_id ,
 				'fname'		=> $data['first_name'] ,
 				'lname'		=> $data['last_name'] ,
 				'expected'	=> ''
 			);
-
 			$insert = $this->BotUserModel->insert_user($data);
-			if ( $insert == TRUE) {
-				
+
+			if ( $insert == TRUE) {	
 				$user = $this->BotUserModel->get_user($sender_id);
 			}
 		}
@@ -128,46 +128,183 @@ class Webhook extends CI_Controller {
 		switch ($msg_data["type"]) {
 
 			case 'text':
+				$expected = $user->expected;
 
-				$wit_entity = $this->wit_api->get_wit_entity($msg_data['data']);
+				if ($expected != '') {
+					switch ($expected) {
 
-				if ( isset($wit_entity['entities']['greetings'])) {
+						case 'address':
+							$this->BotUserModel->update_expected($sender_id, '');
 
-    				$greet = "Hello, Welcome to E-Commerce Chat!";
-    				$this->graph_api->sendText($sender_id, $greet);
-    			}
+							$insertdata = array(
+								'user_id' 	=> $user->id ,
+								'name'		=> $user->fname . ' ' . $user->lname ,
+								'email'		=> '' ,
+								'address'	=> $msg_data['data']
+							);
+							$insert_id = $this->BotOrderModel->insert_order($insertdata);
 
-    			else if ( $wit_entity['entities']['intent'][0]['value'] == "show" ) {
+							if ($insert_id) {
 
-    				if ( isset($wit_entity['entities']['watch'][0]['value'])) {
-    					$brand = $wit_entity['entities']['watch'][0]['value'];
-    					
-    					$data = $this->BotProductModel->get_brand($brand);
+								$cart = $this->BotCartModel->get_cart($sender_id);
+								foreach ($cart as $value) {
+									$data = array(
+										'order_id'	 => $insert_id ,
+										'product_id' => $value->product_id ,
+										'quantity'	 => '1'
+									);
 
-    					$this->graph_api->send_watchTemplate($sender_id, $data);	
-    				} 
-                    else {
-                        $this->graph_api->sendText($msg_data["sender_id"], "Showing you some watch");
-                    } 
-    			}
+									$this->BotOrderModel->insert_orderDetails($data);
 
-    			else if ( $wit_entity['entities']['intent'][0]['value'] == "checkout" ) {
+									$this->BotCartModel->delete_product($value->product_id);
+								}
+								$this->BotUserModel->update_expected($sender_id, "email");
+								$this->graph_api->sendText($sender_id, "Provide Email");
+							}
+					
+							break;
+						
+						case 'email':
+							$this->BotUserModel->update_expected($sender_id, '');
 
-                    	$cart = $this->BotProductModel->get_cart($sender_id);
+							$email = $msg_data['data'];
+							$user_id = $user->id;
+							$this->BotOrderModel->update_order($user_id, $email);
 
-                        $this->graph_api->send_cartTemplate($sender_id, $data);
-                        $this->graph_api->send_quickButton($sender_id, "If Confirm, Kindly click below button");
-                }
+							$this->graph_api->sendText($sender_id, 'Have a Nice Day');
+							break;
+					}
+				
+				}
+
+				else
+				{
+					$wit_entity = $this->wit_api->get_wit_entity($msg_data['data']);
+
+					if ( isset($wit_entity['entities']['greetings'])) {
+
+	    				$greet = "Hello, Welcome to E-Commerce Chat!";
+	    				$this->graph_api->sendText($sender_id, $greet);
+	    			}
+
+	    			else if ( $wit_entity['entities']['intent'][0]['value'] == "show" ) {
+
+	    				if ( isset($wit_entity['entities']['watch'][0]['value'])) {
+	    					$brand = $wit_entity['entities']['watch'][0]['value'];
+	    					
+	    					$data = $this->BotProductModel->get_brand($brand);
+
+	    					$this->graph_api->send_watchTemplate($sender_id, $data);	
+	    				} 
+	                    else {
+	                        $this->graph_api->sendText($msg_data["sender_id"], "Showing you some watch");
+	                    } 
+	    			}
+
+	    			else if ( $wit_entity['entities']['intent'][0]['value'] == "checkout" ) {
+
+	                	$cart = $this->BotCartModel->get_cart($sender_id);
+	                	
+	                	if ($cart) {
+	                		$this->graph_api->send_cartTemplate($sender_id, $cart);
+	                    	$this->graph_api->send_quickButton($sender_id, "If Confirm, Kindly click below button");	
+	                	} else {
+	                		$this->graph_api->sendText($sender_id, "cart is Empty");
+	                	}
+	                        
+	                }
+	            }    
 				break;
 
 			case 'postback':
-				# code...
+				$fb_input = explode("/", $msg_data["data"]); 
+
+				switch ($fb_input[0]) {
+					case 'info':
+						$data = $this->BotProductModel->get_product($fb_input[1]);
+						$text = $this->infoText($data);
+
+						$this->graph_api->sendText($sender_id, $text);
+
+						break;
+					
+					case 'cart':
+						$data = $this->BotProductModel->get_product($fb_input[1]);
+						$insertdata = array(
+							'sender_id' 	=> $sender_id ,
+							'product_id'	=> $data->id ,
+							'product_name'	=> $data->name ,
+							'product_price'	=> $data->price ,
+							'product_image'	=> $data->image
+						);
+
+						$insert = $this->BotCartModel->insert_cart($insertdata);
+
+						if ($insert ==  TRUE) {
+
+							$text = $this->cartText($data);
+							$this->graph_api->sendText($sender_id, $text);
+						}
+
+						break;
+
+					case 'remove':
+						$data = $this->BotCartModel->get_cartproduct($fb_input[1]);
+
+						$delete = $this->BotCartModel->remove_product($fb_input[1]);
+						if ($delete == TRUE) {
+							
+							$text = $this->removeText($data);
+							$this->graph_api->sendText($sender_id, $text);
+						}
+
+						break;
+
+					case 'proceed':
+
+						$this->BotUserModel->update_expected($sender_id, "address");
+						$this->graph_api->sendText($sender_id, "Provide Delivery Address");
+
+						break;
+				}
 				break;
 			
 			default:
 				# code...
 				break;
 		}
+	}
+
+	function infoText($data) {
+
+		$text = 'Product Info :
+Price :  ' . $data->price . '
+Description :  '.$data->description ;
+
+		return $text;
+	}
+
+	function cartText($data) {
+
+		$text = 'successfully Added to Cart :
+
+Prdct Id : ' .$data->id . '
+Prdct Name : ' . $data->name . '
+Price : ' . $data->price . '
+Dscrptn : ' .$data->description;
+
+		return $text;
+
+	}
+
+	function removeText($data) {
+
+		$text = 'Product removed from CART:
+
+Product : ' .$data->product_name. '
+Price : ' .$data->product_price ;
+
+		return $text;
 	}
 
 }

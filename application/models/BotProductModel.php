@@ -15,11 +15,12 @@ class BotProductModel extends CI_Model {
 		return $this->db->where('brand', $brand)->get('product')->result();
 	}
 
-	function get_cart($sender_id) {
-
-		return $this->db->where('sender_id', $sender_id)->get('cart')->result();
+	function get_product($id) {
+		
+		return $this->db->where('id', $id)->get('product')->row();
 	}
 
+	
 }
 
 ?>
