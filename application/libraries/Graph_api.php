@@ -40,16 +40,29 @@ class Graph_api {
 	    // error_log($result);
 	}
 
-	function sendText($sender_id, $text)
+	function sendText($sender_id, $text, $quick_replies=FALSE)
 	{
-	    $data = array(
-	        "recipient" => array(
-	            "id" => $sender_id
-	        ),
-	        "message" => array(
-	            "text" => $text
+		if ( ! $quick_replies) {
+			$data = array(
+		        "recipient" => array(
+		            "id" => $sender_id
+		        ),
+		        "message" => array(
+		            "text" => $text
+		        )
+		    );
+		} else {
+			$data = array(
+	        	"recipient" => array(
+	            	"id" => $sender_id
+	        	),
+		        "message"		=> array(
+		        	"text" 			=> $text ,
+	            	"quick_replies" => $quick_replies
 	        )
 	    );
+	}
+	    
 	    
 	    $this->api_call($data);
 	}
@@ -72,139 +85,6 @@ class Graph_api {
 		);
 
 	    $this->api_call($data);
-	}
-
-	function send_watchTemplate($sender_id, $data) 
-	{
-		$asset_url = "http://masood.localtunnel.me/CI/img/";
-
-	    $elements = array();
-
-	    foreach ($data as $key => $value) {
-	    	$elem = array();
-	    	$elem["title"] 		= $value->name;
-	    	$elem["image_url"] 	= $asset_url . $value->image;
-	    	$elem["subtitle"] 	= 'Rs. '. $value->price;
-	    	
-	    	$elem["buttons"] = 	array(
-	    		array(
-	    			"type" 		=> "postback",
-	    			"title" 	=> "Add to cart",
-	    			"payload" 	=>  "cart/" . $value->id
-	    		),
-	    		array(
-	    			"type" 		=> "postback",
-	    			"title" 	=> "Information",
-	    			"payload" 	=> "info/" . $value->id
-	    		)
-	    	);
-
-	    	$elements[] = $elem;
-	    }
-
-	    $data = array (
-	  		'recipient' => array (
-	    		'id' => $sender_id,
-	    	),
-	  		'message' => array (
-	    		'attachment' => array (
-	      			'type' 		=> 'template',
-	      			'payload'	=> array (
-	        			'template_type' => 'generic',
-	        			'elements'		=> $elements,
-					),
-				),
-			),
-		);
-
-	    $this->api_call($data);
-	}
-
-	function send_cartTemplate($sender_id, $data) {
-    
-	    $asset_url = "http://masood.localtunnel.me/CI/img/";
-
-	    $elements = array();
-
-	    foreach ($data as $key => $value) {
-	        $elem = array();
-	        $elem["title"]      = $value->product_name;
-	        $elem["image_url"]  = $asset_url . $value->product_image;
-	        $elem["subtitle"]   = 'Rs. '. $value->product_price;
-
-	        $elem["buttons"] =  array(
-	            array(
-	                "type"      => "postback",
-	                "title"     => "Remove",
-	                "payload"   =>  'remove/' .$value->id
-	            )
-	        );
-
-	        $elements[] = $elem;
-	    }
-
-	    $data = array (
-	        'recipient' => array (
-	            'id' => $sender_id,
-	        ),
-	        'message' => array (
-	            'attachment' => array (
-	                'type' => 'template',
-	                'payload' => array (
-	                    'template_type' => 'generic',
-	                    'elements' => $elements,
-	                ),
-	            ),
-	        ),
-	    );
-		
-		$this->api_call($data); 
-	}
-
-	function send_text($sender_id, $text, $quick_replies=FALSE)
-	{
-		 if ( ! $quick_replies) {
-		 	$response = array(
-                'recipient' => array(
-                    'id' => $fbSenderID
-                ),
-                'message' => array(
-                    'text' => $answer
-                )
-            );
-		 } else {
-            $response = array(
-                'recipient' => array(
-                    'id' => $fbSenderID
-                ),
-                'message' => array(
-                    'text' => $answer,
-                    'quick_replies' => $quick_replies
-                )
-            );
-        }
-        
-        $this->api_call($response); 
-	}
-
-	function send_quickButton($sender_id, $text) {
-	
-		$data = array(
-			'recipient' => array(
-				'id' => $sender_id
-			),
-			'message' 	=> array(
-				'text' 			=> $text ,
-				'quick_replies' => array(
-					array(
-						'content_type' 	=> 'text' ,
-						'title'			=> 'Proceed..' ,
-						'payload'		=> 'proceed'
-					)
-				)
-			)
-		);
-	    $this->api_call($data); 
 	}
 
 }

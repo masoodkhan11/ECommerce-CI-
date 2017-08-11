@@ -224,36 +224,89 @@ Have a Nice day !' ;
 				} else {
 					$wit_entity = $this->wit_api->get_wit_entity($msg_data['data']);
 
-					if ( isset($wit_entity['entities']['greetings'])) {
+					if ( ! $wit_entity ) {
+						$text = "We've a some issue with our NLP service.";
+	    				$this->graph_api->sendText($sender_id, $text);
+						exit();
+					}
+
+					if ( isset($wit_entity['entities']['greetings']) ) {
 
 	    				$greet = "Hello, Welcome to Watch Shopping!";
 	    				$this->graph_api->sendText($sender_id, $greet);
 
 	    				$text = "for view watch type 'show me titan watches' like that";
 	    				$this->graph_api->sendText($sender_id, $text);
-	    			}
 
-	    			else if ( $wit_entity['entities']['intent'][0]['value'] == "show" ) {
-
+	    			} else if ( $wit_entity['entities']['intent'][0]['value'] == "show" ) {
 	    				if ( isset($wit_entity['entities']['watch'][0]['value'])) {
 	    					$brand = $wit_entity['entities']['watch'][0]['value'];
 	    					
 	    					$data = $this->BotProductModel->get_brand($brand);
 
-	    					$this->graph_api->send_watchTemplate($sender_id, $data);	
-	    				} 
-	                    else {
+	    					$asset_url = "http://masood.localtunnel.me/CI/img/";
+						    $elements = array();
+
+						    foreach ($data as $key => $value) {
+						    	$elem = array();
+						    	$elem["title"] 		= $value->name;
+						    	$elem["image_url"] 	= $asset_url . $value->image;
+						    	$elem["subtitle"] 	= 'Rs. '. $value->price;
+						    	
+						    	$elem["buttons"] = 	array(
+						    		array(
+						    			"type" 		=> "postback",
+						    			"title" 	=> "Add to cart",
+						    			"payload" 	=>  "cart/" . $value->id
+						    		),
+						    		array(
+						    			"type" 		=> "postback",
+						    			"title" 	=> "Information",
+						    			"payload" 	=> "info/" . $value->id
+						    		)
+						    	);
+
+						    	$elements[] = $elem;
+						    }
+
+	    					$this->graph_api->sendCarousel($sender_id, $elements);	
+	    				} else {
 	                        $this->graph_api->sendText($msg_data["sender_id"], "Showing you some watch");
 	                    } 
-	    			}
-
-	    			else if ( $wit_entity['entities']['intent'][0]['value'] == "checkout" ) {
+	    			} else if ( $wit_entity['entities']['intent'][0]['value'] == "checkout" ) {
 
 	                	$cart = $this->BotCartModel->get_cart($sender_id);
 	                	
 	                	if ($cart) {
-	                		$this->graph_api->send_cartTemplate($sender_id, $cart);
-	                    	$this->graph_api->send_quickButton($sender_id, "If Confirm, Kindly click 'Proceed' button");	
+	                		$asset_url = "http://masood.localtunnel.me/CI/img/";
+						    $elements = array();
+
+						    foreach ($cart as $key => $value) {
+						        $elem = array();
+						        $elem["title"]      = $value->product_name;
+						        $elem["image_url"]  = $asset_url . $value->product_image;
+						        $elem["subtitle"]   = 'Rs. '. $value->product_price;
+
+						        $elem["buttons"] =  array(
+						            array(
+						                "type"      => "postback",
+						                "title"     => "Remove",
+						                "payload"   =>  'remove/' .$value->id
+						            )
+						        );
+
+						        $elements[] = $elem;
+						    }
+	                		$this->graph_api->sendCarousel($sender_id, $elements);
+	                		$quick_replies = array(
+								array(
+									'content_type' 	=> 'text' ,
+									'title'			=> 'Proceed..' ,
+									'payload'		=> 'proceed'
+								)
+							);
+							$text = "If Confirm, Kindly click 'Proceed' button" ;
+	                    	$this->graph_api->sendText($sender_id, $text, $quick_replies);	
 	                	} else {
 	                		$this->graph_api->sendText($sender_id, "cart is Empty");
 	                	}

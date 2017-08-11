@@ -13,6 +13,7 @@ class Wit_api {
 		$witURL = 'https://api.wit.ai/message?v=10/07/2017&q='.$user_text ;
 
 		$ch = curl_init();
+		// $header = array('Authorization: Bearer PEVVZM57FCT5SN2CID7HKPJSAWDOMAPA');
 		$header = array('Authorization: Bearer ' . $this->access_token);
 
 		curl_setopt($ch, CURLOPT_URL, $witURL);
@@ -25,6 +26,14 @@ class Wit_api {
 		curl_close ($ch);
 
 		$output = json_decode($wit_output, true);
+
+		if (isset($output['error'])) {
+			log_message('error', print_r(array(
+				'error' => 'wit error', 
+				'payload' => $output
+			), TRUE));
+			return FALSE;
+		}
 
 		return $output;
 	}
