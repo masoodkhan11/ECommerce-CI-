@@ -17,9 +17,7 @@ class ProductModel extends CI_Model
 		return $this->db->where('id', $id)->get("product")->row();
 	}
 
-	// getAll
-	// get_cart_items
-	function getCartItems($cart) 
+	function get_cart_items($cart) 
 	{
 		foreach ($cart as $key => $product) {
 			$detail = $this->db->where('id', $product['id'])->get('product')->row();

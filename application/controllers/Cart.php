@@ -1,8 +1,6 @@
 <?php 
 defined('BASEPATH') OR exit('No direct script access allowed');	
-/**
-* 
-*/
+
 class Cart extends CI_Controller {
 	
 	function __construct() {
@@ -40,7 +38,7 @@ class Cart extends CI_Controller {
 	{
 		$cart = $this->session->userdata('cart') ? $this->session->userdata('cart') : array();
 
-		$data['cart'] = $this->ProductModel->getCartItems($cart);
+		$data['cart'] = $this->ProductModel->get_cart_items($cart);
 
 		$grandtotal = 0 ;
 		foreach ($data['cart'] as $value) {

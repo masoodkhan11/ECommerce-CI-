@@ -17,7 +17,7 @@ class BotOrderModel extends CI_Model {
 		return $this->db->insert_id();	
 	}
 
-	function insert_orderDetails($data) 
+	function insert_order_details($data) 
 	{
 		$this->db->insert('bot_order_details', $data);
 		return $this->db->insert_id();

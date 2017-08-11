@@ -195,7 +195,7 @@ class Webhook extends CI_Controller {
 
 									// inserOrderDetail
 									// insert_order_detail
-									$this->BotOrderModel->insert_orderDetails($data);
+									$this->BotOrderModel->insert_order_details($data);
 
 									$this->BotCartModel->delete_product($sender_id, $value->product_id);
 								}
