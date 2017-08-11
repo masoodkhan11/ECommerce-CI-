@@ -12,15 +12,14 @@ class Order extends CI_Controller {
 		$this->load->library('session');
 	}
 
-	function show($order_id) {
-		 
+	function show($order_id) 
+	{
 		$data['order'] 	= $this->OrderModel->order_detail($order_id);
 		$data['total'] 	= $this->session->total ; 
-
-
-		$this->load->view('order', $data);
 		
 		$this->session->sess_destroy();
+		
+		$this->load->view('order', $data);
 	}
 }
 

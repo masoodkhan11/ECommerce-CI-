@@ -1,19 +1,13 @@
 <?php 
 defined('BASEPATH') OR exit('No direct script access allowed');	
-/**
-* 
-*/
+
 class Products extends CI_Controller {
-	
-	function __construct() {
+	function __construct() 
+	{
 		parent::__construct();
 
 		$this->load->helper('url');
 	    $this->load->model('ProductModel');
-	}
-
-	function index() {
-
 	}
 
 	function show($id)

@@ -12,8 +12,6 @@ class Test extends CI_Controller {
 		$this->load->view('Testview', $data);
 		
 	}
-		
-
 }
 
 ?>

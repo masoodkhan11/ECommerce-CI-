@@ -11,7 +11,6 @@ class Graph_api {
 	}
 
 	function api_user($sender_id) {
-
         $url = "https://graph.facebook.com/v2.6/" . $sender_id . "?fields=first_name,last_name&access_token=" .$this->access_token;
 
         $ch = curl_init();
@@ -38,7 +37,7 @@ class Graph_api {
 
 	    $result = curl_exec($ch); // user will get the message
 
-	    error_log($result);
+	    // error_log($result);
 	}
 
 	function sendText($sender_id, $text)
@@ -55,8 +54,28 @@ class Graph_api {
 	    $this->api_call($data);
 	}
 
-	function send_watchTemplate($sender_id, $data) {
+	function sendCarousel($sender_id, $elements)
+	{
+		$data = array (
+	  		'recipient' => array (
+	    		'id' => $sender_id,
+	    	),
+	  		'message' => array (
+	    		'attachment' => array (
+	      			'type' 		=> 'template',
+	      			'payload'	=> array (
+	        			'template_type' => 'generic',
+	        			'elements'		=> $elements,
+					),
+				),
+			),
+		);
 
+	    $this->api_call($data);
+	}
+
+	function send_watchTemplate($sender_id, $data) 
+	{
 		$asset_url = "http://masood.localtunnel.me/CI/img/";
 
 	    $elements = array();
@@ -140,6 +159,32 @@ class Graph_api {
 	    );
 		
 		$this->api_call($data); 
+	}
+
+	function send_text($sender_id, $text, $quick_replies=FALSE)
+	{
+		 if ( ! $quick_replies) {
+		 	$response = array(
+                'recipient' => array(
+                    'id' => $fbSenderID
+                ),
+                'message' => array(
+                    'text' => $answer
+                )
+            );
+		 } else {
+            $response = array(
+                'recipient' => array(
+                    'id' => $fbSenderID
+                ),
+                'message' => array(
+                    'text' => $answer,
+                    'quick_replies' => $quick_replies
+                )
+            );
+        }
+        
+        $this->api_call($response); 
 	}
 
 	function send_quickButton($sender_id, $text) {

@@ -1,17 +1,14 @@
 <?php 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-/**
-* 
-*/
-class ProductModel extends CI_Model {
-	
-	function __construct() {
-		
+class ProductModel extends CI_Model 
+{	
+	function __construct() {		
 		$this->load->database();
 	}
 
-	function get_all() {
+	function get_all() 
+	{
 		return $this->db->get("product")->result();
 	}
 
@@ -20,6 +17,8 @@ class ProductModel extends CI_Model {
 		return $this->db->where('id', $id)->get("product")->row();
 	}
 
+	// getAll
+	// get_cart_items
 	function getCartItems($cart) 
 	{
 		foreach ($cart as $key => $product) {
@@ -28,7 +27,4 @@ class ProductModel extends CI_Model {
 		}
 		return $cart;
 	}
-
 }
-
- ?>
